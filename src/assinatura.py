@@ -395,11 +395,32 @@ def rodar_automacao(config=None):
 
     # Verifica modo de teste
     modo_teste = config.get('test_mode', False)
+    mock_web = config.get('mock_web', False)
+
     if modo_teste:
         if not _MOCK_DISPONIVEL:
             print('[AVISO] Módulo de mock não encontrado. Instalando dependências de teste...')
         print('[MOCK] 🧪 MODO DE TESTE ATIVO — simulando portal DimensaSign')
         print('[MOCK] Nenhum dado real será acessado ou modificado.')
+
+    # Mock visual com servidor web + navegador real
+    servidor_mock = None
+    if modo_teste and mock_web:
+        try:
+            from src.servidor_mock import ServidorMock
+            servidor_mock = ServidorMock()
+            servidor_mock.iniciar()
+            servidor_mock.aguardar()
+            # Redireciona URLs do navegador para o servidor mock
+            config['navegador']['url']['login'] = servidor_mock.url_login
+            config['navegador']['url']['dashboard'] = servidor_mock.url_dashboard
+            config['navegador']['url']['api'] = servidor_mock.url_api
+            print(f'[MOCK] 🌐 Servidor web mock em {servidor_mock.url_base}')
+            print(f'[MOCK] 🔗 Navegador real apontando para páginas locais')
+        except Exception as e:
+            print(f'[AVISO] Falha ao iniciar servidor mock web: {e}')
+            print('[AVISO] Usando modo mock headless (sem navegador)')
+            mock_web = False
 
     # Inicializa gerador de relatório
     gerador_relatorio = GeradorRelatorio(
@@ -414,8 +435,8 @@ def rodar_automacao(config=None):
         ordem_assinatura=ORDEM_ASSINATURA
     )
 
-    # Abre navegador (real ou mock)
-    if modo_teste:
+    # Abre navegador (real ou mock headless)
+    if modo_teste and not mock_web:
         dimensa = MockDimensaClient(config['navegador'])
     else:
         dimensa = DimensaClient(config['navegador'])
@@ -448,7 +469,7 @@ def rodar_automacao(config=None):
     sessao = dimensa.sessao
     sessao.headers.update({'Authorization': token})
 
-    if modo_teste:
+    if modo_teste and not mock_web:
         wait = MockWebDriverWait(navegador, ESPERA_ELEMENTO)
     else:
         wait = WebDriverWait(navegador, ESPERA_ELEMENTO)
@@ -529,7 +550,7 @@ def rodar_automacao(config=None):
             assinar_lote(navegador, gerador_relatorio, wait,
                          PAUSA_MINIMA, PAUSA_MAXIMA,
                          CERTIFICADO_CPF, CERTIFICADO_NOME,
-                         modo_teste=modo_teste)
+                         modo_teste=(modo_teste and not mock_web))
             logging.info('Lote assinado com sucesso')
 
             for contrato in lote_contratos:

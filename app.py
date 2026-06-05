@@ -89,6 +89,8 @@ controle_bot:
     maxima: 4
 
 test_mode: false
+
+mock_web: false
 """, encoding='utf-8')
 
     with open(path, 'r', encoding='utf-8') as f:
@@ -568,6 +570,18 @@ class DialogAvancadas(tk.Toplevel):
         )
         self.chk_test_mode.grid(row=11, column=0, columnspan=2, sticky='w', pady=3)
 
+        # Mock Web
+        self.mock_web_var = tk.BooleanVar(value=False)
+        self.chk_mock_web = ttk.Checkbutton(
+            frame_navegador,
+            text='🌐 Mock Web (abre navegador de verdade em páginas locais)',
+            variable=self.mock_web_var
+        )
+        self.chk_mock_web.grid(row=12, column=0, columnspan=2, sticky='w', pady=(0, 3))
+        ttk.Label(frame_navegador, text='requer Modo de Teste ativado',
+                  font=('', 8), foreground='#888').grid(
+            row=13, column=0, columnspan=2, sticky='w', padx=(24, 0))
+
         # Aba API Servidor
         frame_api = ttk.Frame(notebook, padding=12)
         notebook.add(frame_api, text='API Servidor')
@@ -659,6 +673,7 @@ class DialogAvancadas(tk.Toplevel):
 
         # Modo de Teste
         self.test_mode_var.set(config.get('test_mode', False))
+        self.mock_web_var.set(config.get('mock_web', False))
 
     def _salvar(self):
         config = self.config
@@ -722,6 +737,7 @@ class DialogAvancadas(tk.Toplevel):
 
         # Modo de Teste
         config['test_mode'] = self.test_mode_var.get()
+        config['mock_web'] = self.mock_web_var.get()
 
         self.parent.config = config
         salvar_config(config)

@@ -39,3 +39,7 @@ controle_bot:
 
 # Modo de teste (true = simula o portal sem precisar do DimensaSign real)
 test_mode: false
+
+# Mock visual com navegador real (requer test_mode: true)
+# Abre o Edge de verdade navegando em páginas mock locais
+mock_web: false
