@@ -229,7 +229,9 @@ def selecionar_certificado(navegador, wait, certificado_cnpj, certificado_nome):
         for certificado in certificados:
             texto = certificado.text
 
-            if f"CNPJ: {certificado_cnpj}" not in texto:
+            # Extrai só os dígitos do texto e compara com o CPF/CNPJ sem formatação
+            digitos_texto = ''.join(c for c in texto if c.isdigit())
+            if certificado_cnpj not in digitos_texto:
                 continue
             if certificado_nome not in texto:
                 continue

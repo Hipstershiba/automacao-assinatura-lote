@@ -194,7 +194,7 @@ text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.15)}
         <small style="color:#666">Válido até: 31/12/2027</small>
       </section>
       <section class="py-2" onclick="selecionarCert(this)">
-        <strong>Certificado Pessoal Teste</strong><br>
+        <strong>Fulano de Tal</strong><br>
         CPF: 123.456.789-00<br>
         <small style="color:#666">Válido até: 30/06/2027</small>
       </section>
