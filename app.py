@@ -470,7 +470,7 @@ class DialogAvancadas(tk.Toplevel):
         self.result = None
 
         self.title('Configurações Avançadas')
-        self.geometry('580x440')
+        self.geometry('620x480')
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
@@ -481,6 +481,45 @@ class DialogAvancadas(tk.Toplevel):
 
         self.wait_window()
 
+    # ── helpers internos ──────────────────────────────────────────
+
+    @staticmethod
+    def _criar_secao(parent, texto, row, columnspan=2):
+        """Label em negrito + separator horizontal."""
+        sep = ttk.Separator(parent, orient='horizontal')
+        sep.grid(row=row, column=0, columnspan=columnspan, sticky='ew', pady=(8, 2))
+        lbl = ttk.Label(parent, text=texto, font=('', 9, 'bold'))
+        lbl.grid(row=row + 1, column=0, columnspan=columnspan, sticky='w', pady=(0, 4))
+        return row + 2  # próxima linha livre
+
+    @staticmethod
+    def _add_row(parent, row, label, widget=None, btn_text=None, btn_cmd=None, nota=''):
+        """Adiciona uma linha label + widget (Entry/Combobox) opcional + botão opcional."""
+        lbl = ttk.Label(parent, text=label)
+        lbl.grid(row=row, column=0, sticky='w', pady=3, padx=(12, 0))
+
+        col = 1
+        if widget is not None:
+            widget.grid(row=row, column=col, sticky='ew', padx=(6, 0), pady=3)
+
+        if btn_text and btn_cmd:
+            # Coloca widget + botão numa sub-frame
+            f = ttk.Frame(parent)
+            f.grid(row=row, column=col, sticky='ew', padx=(6, 0), pady=3)
+            f.columnconfigure(0, weight=1)
+            widget.grid_forget()
+            widget.master = f
+            widget.grid(row=0, column=0, sticky='ew')
+            ttk.Button(f, text=btn_text, width=3, command=btn_cmd).grid(row=0, column=1, padx=(3, 0))
+
+        if nota:
+            n = ttk.Label(parent, text=nota, font=('', 8), foreground='#888')
+            n.grid(row=row + 1, column=1, sticky='w', padx=(6, 0))
+
+        return row + 1
+
+    # ── construção ────────────────────────────────────────────────
+
     def _widgets(self):
         main = ttk.Frame(self, padding=12)
         main.pack(fill='both', expand=True)
@@ -488,259 +527,275 @@ class DialogAvancadas(tk.Toplevel):
         notebook = ttk.Notebook(main)
         notebook.pack(fill='both', expand=True)
 
-        # Aba Usuário
-        frame_usuario = ttk.Frame(notebook, padding=12)
-        notebook.add(frame_usuario, text='Usuário')
-        frame_usuario.columnconfigure(1, weight=1)
+        # =============================================================
+        # ABA 1 — IDENTIDADE
+        # =============================================================
+        frame_id = ttk.Frame(notebook, padding=12)
+        notebook.add(frame_id, text='Identidade')
+        frame_id.columnconfigure(1, weight=1)
 
-        ttk.Label(frame_usuario, text='Nome:').grid(row=0, column=0, sticky='w', pady=3)
-        self.usuario_nome = ttk.Entry(frame_usuario)
-        self.usuario_nome.grid(row=0, column=1, sticky='ew', padx=(6, 0), pady=3)
+        ttk.Label(frame_id, text='Usuário', font=('', 9, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky='w', pady=(0, 4))
 
-        ttk.Label(frame_usuario, text='CPF:').grid(row=1, column=0, sticky='w', pady=3)
-        self.usuario_cpf = ttk.Entry(frame_usuario)
-        self.usuario_cpf.grid(row=1, column=1, sticky='ew', padx=(6, 0), pady=3)
+        self.id_usuario_nome = ttk.Entry(frame_id)
+        self._add_row(frame_id, 1, 'Nome:', widget=self.id_usuario_nome)
+        self.id_usuario_cpf = ttk.Entry(frame_id)
+        self._add_row(frame_id, 2, 'CPF:', widget=self.id_usuario_cpf)
 
-        # Aba Certificado
-        frame_certificado = ttk.Frame(notebook, padding=12)
-        notebook.add(frame_certificado, text='certificado')
-        frame_certificado.columnconfigure(1, weight=1)
+        row = self._criar_secao(frame_id, 'Certificado', row=4)
 
-        ttk.Label(frame_certificado, text='Nome:').grid(row=0, column=0, sticky='w', pady=3)
-        self.certificado_nome = ttk.Entry(frame_certificado)
-        self.certificado_nome.grid(row=0, column=1, sticky='ew', padx=(6, 0), pady=3)
+        self.id_certificado_nome = ttk.Entry(frame_id)
+        self._add_row(frame_id, row, 'Nome:', widget=self.id_certificado_nome)
+        self.id_certificado_cpf = ttk.Entry(frame_id)
+        self._add_row(frame_id, row + 1, 'CPF:', widget=self.id_certificado_cpf)
 
-        ttk.Label(frame_certificado, text='CPF:').grid(row=1, column=0, sticky='w', pady=3)
-        self.certificado_cpf = ttk.Entry(frame_certificado)
-        self.certificado_cpf.grid(row=1, column=1, sticky='ew', padx=(6, 0), pady=3)
+        # =============================================================
+        # ABA 2 — NAVEGADOR
+        # =============================================================
+        frame_nav = ttk.Frame(notebook, padding=12)
+        notebook.add(frame_nav, text='Navegador')
+        frame_nav.columnconfigure(1, weight=1)
 
-        # Aba Navegador
-        frame_navegador = ttk.Frame(notebook, padding=12)
-        notebook.add(frame_navegador, text='Navegador')
-        frame_navegador.columnconfigure(1, weight=1)
+        ttk.Label(frame_nav, text='URLs', font=('', 9, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky='w', pady=(0, 4))
 
-        ttk.Label(frame_navegador, text='URLs:').grid(row=0, column=0, sticky='w', pady=3)
+        self.nav_url_login = ttk.Entry(frame_nav)
+        self._add_row(frame_nav, 1, 'Login:', widget=self.nav_url_login)
+        self.nav_url_dashboard = ttk.Entry(frame_nav)
+        self._add_row(frame_nav, 2, 'Dashboard:', widget=self.nav_url_dashboard)
+        self.nav_url_api = ttk.Entry(frame_nav)
+        self._add_row(frame_nav, 3, 'API:', widget=self.nav_url_api)
 
-        ttk.Label(frame_navegador, text='Login:').grid(row=1, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.url_login = ttk.Entry(frame_navegador)
-        self.url_login.grid(row=1, column=1, sticky='ew', padx=(6, 0), pady=3)
+        row = self._criar_secao(frame_nav, 'Perfil do Navegador', row=5)
 
-        ttk.Label(frame_navegador, text='Dashboard:').grid(row=2, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.url_dashboard = ttk.Entry(frame_navegador)
-        self.url_dashboard.grid(row=2, column=1, sticky='ew', padx=(6, 0), pady=3)
+        self.nav_profile_path = ttk.Entry(frame_nav)
+        self._add_row(frame_nav, row, 'Caminho:', widget=self.nav_profile_path,
+                      btn_text='...', btn_cmd=self._escolher_pasta_navegador)
+        self.nav_profile_name = ttk.Entry(frame_nav)
+        self._add_row(frame_nav, row + 1, 'Nome:', widget=self.nav_profile_name)
 
-        ttk.Label(frame_navegador, text='API:').grid(row=3, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.url_api = ttk.Entry(frame_navegador)
-        self.url_api.grid(row=3, column=1, sticky='ew', padx=(6, 0), pady=3)
+        row = self._criar_secao(frame_nav, 'Conexão', row=row + 3)
 
-        ttk.Label(frame_navegador, text='Perfil:').grid(row=4, column=0, sticky='w', pady=3)
+        self.nav_pausa_login = ttk.Entry(frame_nav)
+        self._add_row(frame_nav, row, 'Pausa pós-login (s):', widget=self.nav_pausa_login)
 
-        ttk.Label(frame_navegador, text='Caminho:').grid(row=5, column=0, sticky='w', pady=3, padx=(12, 0))
-        row_navegador_path = ttk.Frame(frame_navegador)
-        row_navegador_path.grid(row=5, column=1, sticky='ew', padx=(6, 0), pady=3)
-        row_navegador_path.columnconfigure(0, weight=1)
-        self.profile_path = ttk.Entry(row_navegador_path)
-        self.profile_path.grid(row=0, column=0, sticky='ew')
-        ttk.Button(row_navegador_path, text='...', width=3,
-                   command=self._escolher_pasta_navegador).grid(row=0, column=1, padx=(3, 0))
+        row = self._criar_secao(frame_nav, 'Modo de Teste', row=row + 2)
 
-        ttk.Label(frame_navegador, text='Nome:').grid(row=6, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.profile_name = ttk.Entry(frame_navegador)
-        self.profile_name.grid(row=6, column=1, sticky='ew', padx=(6, 0), pady=3)
+        self.nav_test_mode_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            frame_nav,
+            text='🧪 Modo de Teste (simula o portal sem acessar DimensaSign)',
+            variable=self.nav_test_mode_var
+        ).grid(row=row, column=0, columnspan=2, sticky='w', pady=3)
 
-        ttk.Label(frame_navegador, text='Pausas:').grid(row=7, column=0, sticky='w', pady=3)
-
-        ttk.Label(frame_navegador, text='Login:').grid(row=8, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.pausa_login = ttk.Entry(frame_navegador)
-        self.pausa_login.grid(row=8, column=1, sticky='ew', padx=(6, 0), pady=3)
-
-        ttk.Label(frame_navegador, text='Espera Elemento:').grid(row=9, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.pausa_espera_elemento = ttk.Entry(frame_navegador)
-        self.pausa_espera_elemento.grid(row=9, column=1, sticky='ew', padx=(6, 0), pady=3)
-
-        # Espaçador
-        ttk.Separator(frame_navegador, orient='horizontal').grid(
-            row=10, column=0, columnspan=2, sticky='ew', pady=8)
-
-        # Modo de Teste
-        self.test_mode_var = tk.BooleanVar(value=False)
-        self.chk_test_mode = ttk.Checkbutton(
-            frame_navegador, text='🧪 Modo de Teste (simula o portal sem acessar DimensaSign)',
-            variable=self.test_mode_var
-        )
-        self.chk_test_mode.grid(row=11, column=0, columnspan=2, sticky='w', pady=3)
-
-        # Mock Web
-        self.mock_web_var = tk.BooleanVar(value=False)
-        self.chk_mock_web = ttk.Checkbutton(
-            frame_navegador,
+        self.nav_mock_web_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            frame_nav,
             text='🌐 Mock Web (abre navegador de verdade em páginas locais)',
-            variable=self.mock_web_var
-        )
-        self.chk_mock_web.grid(row=12, column=0, columnspan=2, sticky='w', pady=(0, 3))
-        ttk.Label(frame_navegador, text='requer Modo de Teste ativado',
+            variable=self.nav_mock_web_var
+        ).grid(row=row + 1, column=0, columnspan=2, sticky='w', pady=(0, 3))
+        ttk.Label(frame_nav, text='requer Modo de Teste ativado',
                   font=('', 8), foreground='#888').grid(
-            row=13, column=0, columnspan=2, sticky='w', padx=(24, 0))
+            row=row + 2, column=0, columnspan=2, sticky='w', padx=(24, 0))
 
-        # Aba API Servidor
-        frame_api = ttk.Frame(notebook, padding=12)
-        notebook.add(frame_api, text='API Servidor')
-        frame_api.columnconfigure(1, weight=1)
+        # =============================================================
+        # ABA 3 — COMPORTAMENTO
+        # =============================================================
+        frame_comp = ttk.Frame(notebook, padding=12)
+        notebook.add(frame_comp, text='Comportamento')
+        frame_comp.columnconfigure(1, weight=1)
 
-        ttk.Label(frame_api, text='Documentos por requisição:').grid(row=0, column=0, sticky='w', pady=3)
-        self.tamanho_requisicao = ttk.Entry(frame_api)
-        self.tamanho_requisicao.grid(row=0, column=1, sticky='ew', padx=(6, 0), pady=3)
+        ttk.Label(frame_comp, text='Pausas', font=('', 9, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky='w', pady=(0, 4))
 
-        # Aba Assinatura
-        frame_assinatura = ttk.Frame(notebook, padding=12)
-        notebook.add(frame_assinatura, text='Assinatura')
-        frame_assinatura.columnconfigure(1, weight=1)
+        self.comp_espera_elemento = ttk.Entry(frame_comp)
+        self._add_row(frame_comp, 1, 'Espera por elemento (s):', widget=self.comp_espera_elemento,
+                      nota='tempo máximo que o Selenium espera um elemento aparecer')
+        self.comp_pausa_minima = ttk.Entry(frame_comp)
+        self._add_row(frame_comp, 2, 'Pausa mínima (s):', widget=self.comp_pausa_minima,
+                      nota='entre ações do bot')
+        self.comp_pausa_maxima = ttk.Entry(frame_comp)
+        self._add_row(frame_comp, 3, 'Pausa máxima (s):', widget=self.comp_pausa_maxima,
+                      nota='entre ações do bot')
 
-        ttk.Label(frame_assinatura, text='Tamanho do lote').grid(row=0, column=0, sticky='w', pady=3)
-        self.lote_tamanho = ttk.Entry(frame_assinatura)
-        self.lote_tamanho.grid(row=0, column=1, sticky='ew', padx=(6, 0), pady=3)
+        row = self._criar_secao(frame_comp, 'Requisição', row=5)
 
-        ttk.Label(frame_assinatura, text='Ordem de assinatura:').grid(row=1, column=0, sticky='w', pady=3)
-        self.ordem_signatarios = ttk.Entry(frame_assinatura)
-        self.ordem_signatarios.grid(row=1, column=1, sticky='ew', padx=(6, 0), pady=3)
-        ttk.Label(frame_assinatura, text='separado por vírgulas, ex: "emissor,cliente"').grid(
-            row=2, column=1, sticky='w', padx=(6, 0))
+        self.comp_docs_por_req = ttk.Entry(frame_comp)
+        self._add_row(frame_comp, row, 'Docs por requisição:', widget=self.comp_docs_por_req,
+                      nota='quantos documentos buscar por página da API')
 
-        # Aba Controle do Bot
-        frame_controle = ttk.Frame(notebook, padding=12)
-        notebook.add(frame_controle, text='Controle do Bot')
-        frame_controle.columnconfigure(1, weight=1)
+        row = self._criar_secao(frame_comp, 'Simulação (Mock)', row=row + 2)
 
-        ttk.Label(frame_controle, text='Pausas entre ações:').grid(row=0, column=0, sticky='w', pady=3)
+        self.comp_mock_scenario = ttk.Combobox(
+            frame_comp, values=['normal', 'empty', 'minimal', 'expired_certs'],
+            state='readonly', width=18)
+        self._add_row(frame_comp, row, 'Cenário:', widget=self.comp_mock_scenario,
+                      nota='normal=15 docs · empty=0 · minimal=1 · expired_certs=5')
 
-        ttk.Label(frame_controle, text='Mínima:').grid(row=1, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.pausa_minima = ttk.Entry(frame_controle)
-        self.pausa_minima.grid(row=1, column=1, sticky='ew', padx=(6, 0), pady=3)
+        self.comp_mock_delay = ttk.Entry(frame_comp)
+        self._add_row(frame_comp, row + 1, 'Delay simulado (s):', widget=self.comp_mock_delay,
+                      nota='latência artificial do mock (útil p/ testar timeouts)')
 
-        ttk.Label(frame_controle, text='Máxima:').grid(row=2, column=0, sticky='w', pady=3, padx=(12, 0))
-        self.pausa_maxima = ttk.Entry(frame_controle)
-        self.pausa_maxima.grid(row=2, column=1, sticky='ew', padx=(6, 0), pady=3)
+        # =============================================================
+        # ABA 4 — ASSINATURA
+        # =============================================================
+        frame_ass = ttk.Frame(notebook, padding=12)
+        notebook.add(frame_ass, text='Assinatura')
+        frame_ass.columnconfigure(1, weight=1)
 
+        ttk.Label(frame_ass, text='Lote', font=('', 9, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky='w', pady=(0, 4))
+
+        self.ass_lote_tamanho = ttk.Entry(frame_ass)
+        self._add_row(frame_ass, 1, 'Tamanho do lote:', widget=self.ass_lote_tamanho,
+                      nota='documentos por lote de assinatura')
+
+        row = self._criar_secao(frame_ass, 'Fluxo', row=3)
+
+        self.ass_ordem_signatarios = ttk.Entry(frame_ass)
+        self._add_row(frame_ass, row, 'Ordem dos signatários:', widget=self.ass_ordem_signatarios,
+                      nota='separado por vírgulas, ex: "emissor,cliente"')
+
+        # =============================================================
         # Botões
+        # =============================================================
         botoes = ttk.Frame(main)
         botoes.pack(fill='x', pady=(12, 0))
 
         ttk.Button(botoes, text='Salvar', command=self._salvar).pack(side='right', padx=(6, 0))
         ttk.Button(botoes, text='Cancelar', command=self.destroy).pack(side='right')
 
+    # ── carregar valores do config → widgets ──────────────────────
+
     def _carregar(self):
-        config = self.config
+        cfg = self.config
 
-        usuario = config.get('usuario', {})
-        self.usuario_nome.insert(0, usuario.get('nome', ''))
-        self.usuario_cpf.insert(0, usuario.get('cpf', ''))
+        usuario = cfg.get('usuario', {})
+        self.id_usuario_nome.insert(0, usuario.get('nome', ''))
+        self.id_usuario_cpf.insert(0, usuario.get('cpf', ''))
 
-        certificado = config.get('certificado', {})
-        self.certificado_nome.insert(0, certificado.get('nome', ''))
-        self.certificado_cpf.insert(0, certificado.get('cpf', ''))
+        certificado = cfg.get('certificado', {})
+        self.id_certificado_nome.insert(0, certificado.get('nome', ''))
+        self.id_certificado_cpf.insert(0, certificado.get('cpf', ''))
 
-        navegador = config.get('navegador', {})
-        url = navegador.get('url', {})
-        self.url_login.insert(0, url.get('login', ''))
-        self.url_dashboard.insert(0, url.get('dashboard', ''))
-        self.url_api.insert(0, url.get('api', ''))
+        nav = cfg.get('navegador', {})
+        url = nav.get('url', {})
+        self.nav_url_login.insert(0, url.get('login', ''))
+        self.nav_url_dashboard.insert(0, url.get('dashboard', ''))
+        self.nav_url_api.insert(0, url.get('api', ''))
 
-        profile = navegador.get('profile', {})
-        self.profile_path.insert(0, profile.get('path', './user_profile'))
-        self.profile_name.insert(0, profile.get('name', 'Selenium'))
+        profile = nav.get('profile', {})
+        self.nav_profile_path.insert(0, profile.get('path', './user_profile'))
+        self.nav_profile_name.insert(0, profile.get('name', 'Selenium'))
 
-        pausas = navegador.get('pausas', {})
-        self.pausa_login.insert(0, pausas.get('login', '5'))
-        self.pausa_espera_elemento.insert(0, pausas.get('espera_elemento', '60'))
+        pausas_nav = nav.get('pausas', {})
+        self.nav_pausa_login.insert(0, pausas_nav.get('login', '5'))
+        self.comp_espera_elemento.insert(0, pausas_nav.get('espera_elemento', '60'))
 
-        api_servidor = config.get('api_servidor', {})
-        self.tamanho_requisicao.insert(0, str(api_servidor.get('documentos_por_requisicao', '3000')))
+        api_srv = cfg.get('api_servidor', {})
+        self.comp_docs_por_req.insert(0, str(api_srv.get('documentos_por_requisicao', '3000')))
 
-        assinatura = config.get('assinatura', {})
-        fluxo = assinatura.get('fluxo', {})
+        ass = cfg.get('assinatura', {})
+        fluxo = ass.get('fluxo', {})
         sequencia = fluxo.get('ordem_signatarios', '')
         if isinstance(sequencia, list):
             sequencia = ', '.join(sequencia)
-        self.ordem_signatarios.insert(0, sequencia or '')
+        self.ass_ordem_signatarios.insert(0, sequencia or '')
 
-        lote = assinatura.get('lote', {})
-        self.lote_tamanho.insert(0, lote.get('tamanho', '10'))
+        lote = ass.get('lote', {})
+        self.ass_lote_tamanho.insert(0, str(lote.get('tamanho', '10')))
 
-        controle_bot = config.get('controle_bot', {})
-        pausas = controle_bot.get('pausas', {})
-        self.pausa_minima.insert(0, pausas.get('minima', '2'))
-        self.pausa_maxima.insert(0, pausas.get('maxima', '3'))
+        ctl = cfg.get('controle_bot', {})
+        pausas_ctl = ctl.get('pausas', {})
+        self.comp_pausa_minima.insert(0, pausas_ctl.get('minima', '2'))
+        self.comp_pausa_maxima.insert(0, pausas_ctl.get('maxima', '4'))
 
         # Modo de Teste
-        self.test_mode_var.set(config.get('test_mode', False))
-        self.mock_web_var.set(config.get('mock_web', False))
+        self.nav_test_mode_var.set(cfg.get('test_mode', False))
+        self.nav_mock_web_var.set(cfg.get('mock_web', False))
+
+        # Mock
+        scenario = cfg.get('mock_scenario', 'normal')
+        self.comp_mock_scenario.set(scenario)
+        self.comp_mock_delay.insert(0, str(cfg.get('mock_delay', '0')))
+
+    # ── salvar widgets → config ──────────────────────────────────
 
     def _salvar(self):
-        config = self.config
+        cfg = self.config
 
-        config.setdefault('usuario', {})
-        config['usuario']['nome'] = self.usuario_nome.get().strip()
-        config['usuario']['cpf'] = self.usuario_cpf.get().strip()
+        # Identidade
+        cfg.setdefault('usuario', {})
+        cfg['usuario']['nome'] = self.id_usuario_nome.get().strip()
+        cfg['usuario']['cpf'] = self.id_usuario_cpf.get().strip()
 
-        config.setdefault('certificado', {})
-        config['certificado']['nome'] = self.certificado_nome.get().strip()
-        config['certificado']['cpf'] = self.certificado_cpf.get().strip()
+        cfg.setdefault('certificado', {})
+        cfg['certificado']['nome'] = self.id_certificado_nome.get().strip()
+        cfg['certificado']['cpf'] = self.id_certificado_cpf.get().strip()
 
-        config.setdefault('navegador', {})
-        config['navegador'].setdefault('url', {})
-        config['navegador']['url']['login'] = self.url_login.get().strip()
-        config['navegador']['url']['dashboard'] = self.url_dashboard.get().strip()
-        config['navegador']['url']['api'] = self.url_api.get().strip()
+        # Navegador
+        cfg.setdefault('navegador', {})
+        cfg['navegador'].setdefault('url', {})
+        cfg['navegador']['url']['login'] = self.nav_url_login.get().strip()
+        cfg['navegador']['url']['dashboard'] = self.nav_url_dashboard.get().strip()
+        cfg['navegador']['url']['api'] = self.nav_url_api.get().strip()
 
-        config['navegador'].setdefault('profile', {})
-        config['navegador']['profile']['path'] = self.profile_path.get().strip()
-        config['navegador']['profile']['name'] = self.profile_name.get().strip()
+        cfg['navegador'].setdefault('profile', {})
+        cfg['navegador']['profile']['path'] = self.nav_profile_path.get().strip()
+        cfg['navegador']['profile']['name'] = self.nav_profile_name.get().strip()
 
-        config['navegador'].setdefault('pausas', {})
+        cfg['navegador'].setdefault('pausas', {})
         try:
-            config['navegador']['pausas']['login'] = int(self.pausa_login.get().strip() or 5)
-            config['navegador']['pausas']['espera_elemento'] = int(self.pausa_espera_elemento.get().strip() or 60)
+            cfg['navegador']['pausas']['login'] = int(self.nav_pausa_login.get().strip() or 5)
+            cfg['navegador']['pausas']['espera_elemento'] = int(self.comp_espera_elemento.get().strip() or 60)
         except ValueError:
-            messagebox.showerror('Erro', 'Pausas do navegador devem ser números inteiros', parent=self)
+            messagebox.showerror('Erro', 'Pausas devem ser números inteiros', parent=self)
             return
 
-        config.setdefault('api_servidor', {})
+        # API Servidor (mesma chave de sempre)
+        cfg.setdefault('api_servidor', {})
         try:
-            config['api_servidor']['documentos_por_requisicao'] = int(self.tamanho_requisicao.get().strip() or 3000)
+            cfg['api_servidor']['documentos_por_requisicao'] = int(self.comp_docs_por_req.get().strip() or 3000)
         except ValueError:
-            messagebox.showerror('Erro', 'O tamanho da requisição deve ser um número inteiro', parent=self)
+            messagebox.showerror('Erro', 'Documentos por requisição deve ser um número inteiro', parent=self)
             return
 
-        config.setdefault('assinatura', {})
-        config['assinatura'].setdefault('fluxo', {})
-        config['assinatura'].setdefault('lote', {})
-        ordem_raw = self.ordem_signatarios.get().strip()
+        # Assinatura
+        cfg.setdefault('assinatura', {})
+        cfg['assinatura'].setdefault('fluxo', {})
+        cfg['assinatura'].setdefault('lote', {})
+        ordem_raw = self.ass_ordem_signatarios.get().strip()
         if ordem_raw:
-            config['assinatura']['fluxo']['ordem_signatarios'] = [x.strip() for x in ordem_raw.split(',') if x.strip()]
+            cfg['assinatura']['fluxo']['ordem_signatarios'] = [x.strip() for x in ordem_raw.split(',') if x.strip()]
         else:
-            config['assinatura']['fluxo']['ordem_signatarios'] = []
+            cfg['assinatura']['fluxo']['ordem_signatarios'] = []
 
         try:
-            config['assinatura']['lote']['tamanho'] = int(self.lote_tamanho.get().strip() or 10)
+            cfg['assinatura']['lote']['tamanho'] = int(self.ass_lote_tamanho.get().strip() or 10)
         except ValueError:
             messagebox.showerror('Erro', 'O tamanho do lote deve ser um número inteiro', parent=self)
             return
 
-        config.setdefault('controle_bot', {})
-        config['controle_bot'].setdefault('pausas', {})
+        # Controle do Bot (mesmas chaves)
+        cfg.setdefault('controle_bot', {})
+        cfg['controle_bot'].setdefault('pausas', {})
         try:
-            config['controle_bot']['pausas']['minima'] = int(self.pausa_minima.get().strip() or 2)
-            config['controle_bot']['pausas']['maxima'] = int(self.pausa_maxima.get().strip() or 4)
+            cfg['controle_bot']['pausas']['minima'] = int(self.comp_pausa_minima.get().strip() or 2)
+            cfg['controle_bot']['pausas']['maxima'] = int(self.comp_pausa_maxima.get().strip() or 4)
         except ValueError:
             messagebox.showerror('Erro', 'Pausas do bot devem ser números inteiros', parent=self)
             return
 
         # Modo de Teste
-        config['test_mode'] = self.test_mode_var.get()
-        config['mock_web'] = self.mock_web_var.get()
+        cfg['test_mode'] = self.nav_test_mode_var.get()
+        cfg['mock_web'] = self.nav_mock_web_var.get()
 
-        self.parent.config = config
-        salvar_config(config)
+        # Mock scenario / delay
+        cfg['mock_scenario'] = self.comp_mock_scenario.get()
+        cfg['mock_delay'] = int(self.comp_mock_delay.get().strip() or 0)
+
+        self.parent.config = cfg
+        salvar_config(cfg)
         self.parent._carregar_campos()
         self.parent._log('[INFO] Configurações avançadas salvas')
 
@@ -752,8 +807,8 @@ class DialogAvancadas(tk.Toplevel):
             parent=self,
         )
         if pasta:
-            self.profile_path.delete(0, 'end')
-            self.profile_path.insert(0, pasta)
+            self.nav_profile_path.delete(0, 'end')
+            self.nav_profile_path.insert(0, pasta)
 
     def _centralizar(self):
         self.update_idletasks()
