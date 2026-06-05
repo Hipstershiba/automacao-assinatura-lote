@@ -60,19 +60,6 @@ Ou edite o `config.yaml`:
 test_mode: true
 ```
 
-### Mock Web (navegador real em páginas locais)
-
-Quer **ver o robô funcionando de verdade** sem o portal? Ative o Mock Web:
-
-```yaml
-test_mode: true
-mock_web: true
-```
-
-Isso inicia um servidor web local que serve páginas simulando o DimensaSign,
-e o Selenium abre o **Edge de verdade** navegando nessas páginas mock.
-Você vê login, navegação, cliques e assinatura como se fosse no portal real.
-
 ### Script direto (CLI)
 
 ```bash
