@@ -14,6 +14,12 @@ from pathlib import Path
 from src.assinatura import rodar_automacao
 
 #========================================
+# VERSION
+#========================================
+
+VERSION = '1.1.0'
+
+#========================================
 # PATHS
 #========================================
 
@@ -452,7 +458,7 @@ class LauncherApp(tk.Tk):
         messagebox.showinfo(
             'Sobre',
             'Automação de Assinatura em Lote\n\n'
-            'Versão: 2.0\n'
+            f'Versão: {VERSION}\n'
             'Plataforma: DimensaSign\n\n'
             'Configurações avançadas disponíveis no menu Configurações.'
         )
