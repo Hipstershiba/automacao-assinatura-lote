@@ -494,23 +494,23 @@ class DialogAvancadas(tk.Toplevel):
 
     @staticmethod
     def _add_row(parent, row, label, widget=None, btn_text=None, btn_cmd=None, nota=''):
-        """Adiciona uma linha label + widget (Entry/Combobox) opcional + botão opcional."""
+        """Adiciona uma linha label + widget opcional + botão opcional."""
         lbl = ttk.Label(parent, text=label)
         lbl.grid(row=row, column=0, sticky='w', pady=3, padx=(12, 0))
 
         col = 1
-        if widget is not None:
-            widget.grid(row=row, column=col, sticky='ew', padx=(6, 0), pady=3)
 
         if btn_text and btn_cmd:
-            # Coloca widget + botão numa sub-frame
+            # Sub-frame com Entry + botão (não grida widget no parent antes)
             f = ttk.Frame(parent)
             f.grid(row=row, column=col, sticky='ew', padx=(6, 0), pady=3)
             f.columnconfigure(0, weight=1)
-            widget.grid_forget()
-            widget.master = f
-            widget.grid(row=0, column=0, sticky='ew')
-            ttk.Button(f, text=btn_text, width=3, command=btn_cmd).grid(row=0, column=1, padx=(3, 0))
+            if widget is not None:
+                widget.grid(in_=f, row=0, column=0, sticky='ew')
+            ttk.Button(f, text=btn_text, width=3, command=btn_cmd).grid(
+                row=0, column=1, padx=(3, 0))
+        elif widget is not None:
+            widget.grid(row=row, column=col, sticky='ew', padx=(6, 0), pady=3)
 
         if nota:
             n = ttk.Label(parent, text=nota, font=('', 8), foreground='#888')
