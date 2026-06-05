@@ -321,7 +321,18 @@ def assinar_lote(navegador, gerador_relatorio, wait,
         encerrar_automacao(navegador, gerador_relatorio, 1)
     delay(pausa_minima, pausa_maxima)
 
-    # Confirma assinatura
+    # Confirma assinatura — primeiro clica em "Confirmar Assinatura"
+    # (tela intermediária que exibe o modal de confirmação)
+    try:
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnConfirmar"]')))
+        navegador.find_element(By.XPATH, '//*[@id="btnConfirmar"]').click()
+        logging.info('Confirmação de certificado acionada')
+    except Exception as e:
+        logging.error('Falha ao acionar confirmação de certificado')
+        logging.error(e)
+        encerrar_automacao(navegador, gerador_relatorio, 1)
+    delay(pausa_minima, pausa_maxima)
+
     try:
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="tutorial-cert-assina"]')))
         navegador.find_element(By.XPATH, '//*[@id="tutorial-cert-assina"]').click()
