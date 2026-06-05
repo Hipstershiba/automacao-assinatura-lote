@@ -276,7 +276,7 @@ class MockHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def log_message(self, format, *args):
-        logger.debug(f'[MockServer] {args[0]} {args[1]} {args[2]}')
+        logger.info(f'[MockServer] {args[0]} {args[1]} {args[2]}')
 
     # ── Rotas ──
 

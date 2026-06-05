@@ -33,6 +33,13 @@ HIDDEN_IMPORTS = [
     'openpyxl.worksheet',
     'yaml',
     'requests',
+    'src.servidor_mock',
+    'src.dimensa_mock',
+    'src.dimensa_client',
+    'src.contrato',
+    'src.gerador_relatorio',
+    'certifi',
+    'charset_normalizer',
 ]
 
 # Dados adicionais necessários em tempo de execução (src/ + config)

@@ -1,38 +1,32 @@
-=== INSTRUÇÕES ===
+========================================
+assinatura-lote — Build & Uso
+========================================
 
-1. Instalar dependências:
-   pip install -r requirements.txt
+📁 Estrutura do executável (--onedir):
+  dist/assinatura-lote/
+  ├── assinatura-lote.exe   ← executável (5.9 MB)
+  ├── config.yaml.example   ← copie para config.yaml e configure
+  └── _internal/            ← dependências e módulos
 
-2. Testar (sem build, sem acessar DimensaSign):
-   python app.py
-   → Ative "🧪 Modo de Teste" nas Configurações Avançadas > Navegador
-   → Ou edite config.yaml: test_mode: true
+🚀 Para usar:
+  1. Copie a pasta dist/assinatura-lote/ para o Windows
+  2. Renomeie _internal/src/config.yaml.example → config.yaml
+     (ou coloque config.yaml na mesma pasta do .exe)
+  3. Execute assinatura-lote.exe
 
-3. Rodar script standalone:
-   python src/assinatura.py
+🧪 Modo Mock (testar sem DimensaSign):
+  Na GUI, marque "Modo Teste" e "Mock Web"
+  Ou no config.yaml:
+    test_mode: true
+    mock_web: true
 
-4. Build do executável (modo onedir — rápido de abrir):
-   python build.py
+🔧 Para rebuildar (precisa de Python):
+  python -m venv .venv
+  .venv\Scripts\activate
+  pip install -r requirements.txt
+  python build.py
 
-5. Executável gerado em:
-   ./dist/assinatura-lote/assinatura-lote.exe
-
-=== MODO DE TESTE ===
-
-Quando test_mode = true:
-- Não abre navegador real
-- Gera 15 contratos falsos para processar
-- Simula login, token, assinaturas
-- Gera relatório Excel normalmente
-- Perfeito para validar o app sem o portal DimensaSign
-
-=== ESTRUTURA ===
-
-app.py              → Launcher GUI (ponto de entrada único)
-src/assinatura.py   → Módulo de automação
-src/dimensa_client.py → Cliente Selenium para DimensaSign
-src/dimensa_mock.py → Cliente mock para testes sem portal
-src/contrato.py     → Modelo de contrato
-src/gerador_relatorio.py → Gerador de relatórios Excel
-config.yaml.example → Template de configuração
-build.py            → Script de build (PyInstaller, onedir)
+✅ Corrigido nesta versão:
+  - URL de batch-subscription agora respeita modo mock_web
+  - Mensagens [MOCK] registradas tanto na GUI quanto no log
+  - Servidor mock loga requisições no mesmo arquivo .log

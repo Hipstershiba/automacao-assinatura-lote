@@ -258,16 +258,22 @@ def selecionar_certificado(navegador, wait, certificado_cnpj, certificado_nome):
 def assinar_lote(navegador, gerador_relatorio, wait,
                  pausa_minima, pausa_maxima,
                  certificado_cpf, certificado_nome,
-                 modo_teste=False):
+                 modo_teste=False,
+                 url_batch=None):
 
     if modo_teste:
-        print(f'[MOCK] 📝 Simulando assinatura em lote...')
-        print(f'[MOCK] ✅ Lote assinado com sucesso (simulado)!')
+        msg = '[MOCK] 📝 Simulando assinatura em lote...'
+        print(msg)
+        logging.info(msg)
+        msg = '[MOCK] ✅ Lote assinado com sucesso (simulado)!'
+        print(msg)
+        logging.info(msg)
         return
 
     # Abre página de assinar em lote
+    url_batch = url_batch or 'https://sign.app.dimensa.com.br/adminsign/user/batch-subscription'
     try:
-        navegador.get('https://sign.app.dimensa.com.br/adminsign/user/batch-subscription')
+        navegador.get(url_batch)
     except Exception as e:
         logging.error('Falha ao tentar acessar página Assinar em Lote')
         logging.error(e)
@@ -400,8 +406,12 @@ def rodar_automacao(config=None):
     if modo_teste:
         if not _MOCK_DISPONIVEL:
             print('[AVISO] Módulo de mock não encontrado. Instalando dependências de teste...')
-        print('[MOCK] 🧪 MODO DE TESTE ATIVO — simulando portal DimensaSign')
-        print('[MOCK] Nenhum dado real será acessado ou modificado.')
+        msg = '[MOCK] 🧪 MODO DE TESTE ATIVO — simulando portal DimensaSign'
+        print(msg)
+        logging.info(msg)
+        msg = '[MOCK] Nenhum dado real será acessado ou modificado.'
+        print(msg)
+        logging.info(msg)
 
     # Mock visual com servidor web + navegador real
     servidor_mock = None
@@ -416,7 +426,9 @@ def rodar_automacao(config=None):
             config['navegador']['url']['dashboard'] = servidor_mock.url_dashboard
             config['navegador']['url']['api'] = servidor_mock.url_api
             print(f'[MOCK] 🌐 Servidor web mock em {servidor_mock.url_base}')
+            logging.info(f'[MOCK] 🌐 Servidor web mock em {servidor_mock.url_base}')
             print(f'[MOCK] 🔗 Navegador real apontando para páginas locais')
+            logging.info(f'[MOCK] 🔗 Navegador real apontando para páginas locais')
         except Exception as e:
             print(f'[AVISO] Falha ao iniciar servidor mock web: {e}')
             print('[AVISO] Usando modo mock headless (sem navegador)')
@@ -550,7 +562,8 @@ def rodar_automacao(config=None):
             assinar_lote(navegador, gerador_relatorio, wait,
                          PAUSA_MINIMA, PAUSA_MAXIMA,
                          CERTIFICADO_CPF, CERTIFICADO_NOME,
-                         modo_teste=(modo_teste and not mock_web))
+                         modo_teste=(modo_teste and not mock_web),
+                         url_batch=(URL_API + '/batch-subscription') if mock_web else None)
             logging.info('Lote assinado com sucesso')
 
             for contrato in lote_contratos:
