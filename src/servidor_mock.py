@@ -11,6 +11,13 @@ import random
 import datetime
 import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
+
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """HTTPServer com suporte a múltiplas threads (uma por request)."""
+    allow_reuse_address = True
+    daemon_threads = True
 from urllib.parse import urlparse, parse_qs
 
 logger = logging.getLogger(__name__)
@@ -354,7 +361,7 @@ class ServidorMock:
 
     def iniciar(self):
         """Inicia o servidor em uma thread daemon."""
-        self._server = HTTPServer((self.host, self.port), MockHandler)
+        self._server = ThreadedHTTPServer((self.host, self.port), MockHandler)
         self.port = self._server.server_address[1]
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
         self._thread.start()
