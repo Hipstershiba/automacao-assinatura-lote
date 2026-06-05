@@ -528,10 +528,10 @@ class DialogAvancadas(tk.Toplevel):
         notebook.pack(fill='both', expand=True)
 
         # =============================================================
-        # ABA 1 — IDENTIDADE
+        # ABA 1 — CREDENCIAIS
         # =============================================================
         frame_id = ttk.Frame(notebook, padding=12)
-        notebook.add(frame_id, text='Identidade')
+        notebook.add(frame_id, text='Credenciais')
         frame_id.columnconfigure(1, weight=1)
 
         ttk.Label(frame_id, text='Usuário', font=('', 9, 'bold')).grid(
