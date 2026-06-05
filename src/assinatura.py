@@ -108,8 +108,7 @@ def baixar_contratos(sessao, parametros, url_api):
                    f"({percentual:.1f}%) | ETA: {eta_str}")
 
             logging.info(msg)
-            sys.stdout.write(f"\r[PROCESSO] {msg}")
-            sys.stdout.flush()
+            print(f"[PROGRESSO] {msg}")
 
         except Exception as e:
             logging.error(f"\nErro na página {pagina}: {e}")
@@ -405,7 +404,6 @@ def rodar_automacao(config=None, stop_event=None):
     logging.info('========================================')
     logging.info('INICIANDO AUTOMAÇÃO')
     logging.info('========================================')
-    print('[INFO] INICIANDO AUTOMAÇÃO')
 
     # Verifica modo de teste
     modo_teste = config.get('test_mode', False)
