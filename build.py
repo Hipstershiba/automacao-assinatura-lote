@@ -65,6 +65,7 @@ def build():
     cmd = [
         sys.executable, '-m', 'PyInstaller',
         '--onedir',                          # modo diretório (rápido de abrir)
+        '--noconsole',                       # sem janela cmd (log vai pra GUI)
         '--name', output_name,
         '--distpath', str(DIST_DIR),
         '--workpath', str(BUILD_DIR),
