@@ -568,9 +568,16 @@ class DialogAvancadas(tk.Toplevel):
 
         row = self._criar_secao(frame_nav, 'Perfil do Navegador', row=5)
 
-        self.nav_profile_path = ttk.Entry(frame_nav)
-        self._add_row(frame_nav, row, 'Caminho:', widget=self.nav_profile_path,
-                      btn_text='...', btn_cmd=self._escolher_pasta_navegador)
+        # Sub-frame manual: Entry + botão ... (Entry criado dentro da sub-frame)
+        row_path = ttk.Frame(frame_nav)
+        row_path.grid(row=row, column=1, sticky='ew', padx=(6, 0), pady=3)
+        row_path.columnconfigure(0, weight=1)
+        self.nav_profile_path = ttk.Entry(row_path)
+        self.nav_profile_path.grid(row=0, column=0, sticky='ew')
+        ttk.Button(row_path, text='...', width=3,
+                   command=self._escolher_pasta_navegador).grid(row=0, column=1, padx=(3, 0))
+        ttk.Label(frame_nav, text='Caminho:').grid(
+            row=row, column=0, sticky='w', pady=3, padx=(12, 0))
         self.nav_profile_name = ttk.Entry(frame_nav)
         self._add_row(frame_nav, row + 1, 'Nome:', widget=self.nav_profile_name)
 
