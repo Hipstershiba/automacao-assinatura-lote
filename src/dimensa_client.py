@@ -71,6 +71,14 @@ class DimensaClient:
 
         url = self.navegador.current_url
         while url != self.url_dashboard:
+            if os.path.exists("sinal_parar.tmp"):
+                logger.info("Parada solicitada durante login")
+                print("[INFO] Parada solicitada — interrompendo login")
+                try:
+                    os.remove("sinal_parar.tmp")
+                except Exception:
+                    pass
+                raise RuntimeError("Parada solicitada pelo usuário")
             print('[INFO] Aguardando login...')
             time.sleep(self.pausa_login)
             url = self.navegador.current_url
@@ -117,8 +125,18 @@ class DimensaClient:
         url = f'{self.url_api}/api/v2/documentos/list/meus-documentos'
 
         for tentativa in range(1, tentativas + 1):
+            # Verifica se o usuário solicitou parada
+            if os.path.exists("sinal_parar.tmp"):
+                logger.info("Parada solicitada durante validação do token")
+                print("[INFO] Parada solicitada — interrompendo validação do token")
+                try:
+                    os.remove("sinal_parar.tmp")
+                except Exception:
+                    pass
+                raise RuntimeError("Parada solicitada pelo usuário")
+
             try:
-                response = self.sessao.get(url, params={'limit': 1})
+                response = self.sessao.get(url, params={'limit': 1}, timeout=intervalo)
                 if response.ok:
                     logger.info(f'Token validado com sucesso na tentativa {tentativa}')
                     print(f'[INFO] Token validado com sucesso na tentativa {tentativa}')
