@@ -6,6 +6,7 @@
 *.pdf
 *.xlsx
 !info.txt
+!requirements.txt
 __pycache__
 /build
 /dist
