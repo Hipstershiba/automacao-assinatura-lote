@@ -231,8 +231,9 @@ class MockDimensaClient:
       - sessao (propriedade)
     """
 
-    def __init__(self, config_navegador=None):
+    def __init__(self, config_navegador=None, stop_event=None):
         self.config_navegador = config_navegador or {}
+        self.stop_event = stop_event
         self.token = 'Bearer mock-token-para-teste'
         self._navegador = None
         self._sessao = None

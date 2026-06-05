@@ -5,6 +5,7 @@ import os
 import time
 import json
 import logging
+import threading
 import requests
 
 from selenium import webdriver
@@ -21,9 +22,10 @@ logger = logging.getLogger(__name__)
 # Classe
 #========================================
 class DimensaClient:
-    def __init__(self, config_navegador=None):
+    def __init__(self, config_navegador=None, stop_event=None):
         
         self._validar_config(config_navegador)
+        self.stop_event = stop_event or threading.Event()
         self.url_login = config_navegador['url']['login']
         self.url_dashboard = config_navegador['url']['dashboard']
         self.url_api = config_navegador['url']['api']
@@ -71,13 +73,9 @@ class DimensaClient:
 
         url = self.navegador.current_url
         while url != self.url_dashboard:
-            if os.path.exists("sinal_parar.tmp"):
+            if self.stop_event.is_set():
                 logger.info("Parada solicitada durante login")
                 print("[INFO] Parada solicitada — interrompendo login")
-                try:
-                    os.remove("sinal_parar.tmp")
-                except Exception:
-                    pass
                 raise RuntimeError("Parada solicitada pelo usuário")
             print('[INFO] Aguardando login...')
             time.sleep(self.pausa_login)
@@ -126,13 +124,9 @@ class DimensaClient:
 
         for tentativa in range(1, tentativas + 1):
             # Verifica se o usuário solicitou parada
-            if os.path.exists("sinal_parar.tmp"):
+            if self.stop_event.is_set():
                 logger.info("Parada solicitada durante validação do token")
                 print("[INFO] Parada solicitada — interrompendo validação do token")
-                try:
-                    os.remove("sinal_parar.tmp")
-                except Exception:
-                    pass
                 raise RuntimeError("Parada solicitada pelo usuário")
 
             try:

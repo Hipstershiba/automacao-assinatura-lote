@@ -301,6 +301,7 @@ class LauncherApp(tk.Tk):
 
         self._running = True
         self._thread = None
+        self._stop_event = threading.Event()
         self.btn_executar.configure(state='disabled', text='▶ Executando...')
         self.btn_parar.configure(state='normal')
         self._log('[INFO] Iniciando automação...')
@@ -327,7 +328,7 @@ class LauncherApp(tk.Tk):
             os.chdir(str(BASE_DIR))
 
             # Executa o módulo de automação
-            rodar_automacao(self.config)
+            rodar_automacao(self.config, stop_event=self._stop_event)
 
             # Se chegou aqui sem sys.exit, foi sucesso
             self._log('[✓] Automação concluída com sucesso!')
@@ -359,13 +360,10 @@ class LauncherApp(tk.Tk):
         self.btn_parar.configure(state='disabled')
 
     def _parar(self):
-        """Sinaliza parada via arquivo temporário (lido pelo módulo a cada lote)."""
-        if self._running:
+        """Sinaliza parada via threading.Event (lido pelo módulo a cada lote)."""
+        if self._running and self._stop_event:
             self._log('[WARNING] Solicitando parada... (a automação será interrompida ao final do lote atual)')
-            try:
-                Path(BASE_DIR / 'sinal_parar.tmp').touch()
-            except Exception as e:
-                self._log(f'[WARNING] Erro ao criar sinal de parada: {e}')
+            self._stop_event.set()
 
     def _limpar_log(self):
         self.log_text.configure(state='normal')

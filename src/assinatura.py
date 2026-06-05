@@ -197,16 +197,10 @@ def encerrar_automacao(navegador, gerador_relatorio=None, codigo=1, perguntar=Fa
             print("Opção inválida! Aperte ENTER ou digite 'Y' ou 'N'.")
 
 
-def verificar_solicitacao_parada(navegador, gerador_relatorio=None):
+def verificar_solicitacao_parada(navegador, gerador_relatorio=None, stop_event=None):
     """Verifica se a interface gráfica solicitou a interrupção da automação."""
-    if os.path.exists("sinal_parar.tmp"):
+    if stop_event and stop_event.is_set():
         print("\n[INFO] Sinal de interrupção detectado vindo da interface!")
-
-        try:
-            os.remove("sinal_parar.tmp")
-        except Exception as e:
-            print(f"[WARNING] Erro ao deletar arquivo de sinal: {e}")
-
         encerrar_automacao(navegador, gerador_relatorio, codigo=0, perguntar=False)
 
 
@@ -351,13 +345,14 @@ def assinar_lote(navegador, gerador_relatorio, wait,
 # Função principal (ponto de entrada único)
 #========================================
 
-def rodar_automacao(config=None):
+def rodar_automacao(config=None, stop_event=None):
     """
     Executa a automação de assinatura em lote.
 
     Parâmetros:
         config: dicionário com toda a configuração (mesma estrutura do config.yaml).
                 Se None, lê do arquivo 'config.yaml' no diretório atual.
+        stop_event: threading.Event para interromper a execução.
 
     Retorna: 0 em caso de sucesso, 1 em caso de erro.
 
@@ -453,9 +448,9 @@ def rodar_automacao(config=None):
 
     # Abre navegador (real ou mock headless)
     if modo_teste and not mock_web:
-        dimensa = MockDimensaClient(config['navegador'])
+        dimensa = MockDimensaClient(config['navegador'], stop_event=stop_event)
     else:
-        dimensa = DimensaClient(config['navegador'])
+        dimensa = DimensaClient(config['navegador'], stop_event=stop_event)
     dimensa.iniciar_navegador()
     navegador = dimensa.navegador
 
@@ -552,7 +547,7 @@ def rodar_automacao(config=None):
     print(f'[INFO] Contratos restantes: {contratos_restantes}/{contratos_total}')
 
     for i in range(0, contratos_total, TAMANHO_LOTE):
-        verificar_solicitacao_parada(navegador, gerador_relatorio)
+        verificar_solicitacao_parada(navegador, gerador_relatorio, stop_event=stop_event)
         lote_contratos = contratos_validados[i: i + TAMANHO_LOTE]
         ids_lote = [contrato.id for contrato in lote_contratos]
         try:
