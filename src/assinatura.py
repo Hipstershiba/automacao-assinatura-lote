@@ -429,6 +429,10 @@ def rodar_automacao(config=None):
             logging.info(f'[MOCK] 🌐 Servidor web mock em {servidor_mock.url_base}')
             print(f'[MOCK] 🔗 Navegador real apontando para páginas locais')
             logging.info(f'[MOCK] 🔗 Navegador real apontando para páginas locais')
+            # Re-extrai URLs após mock server estar pronto (porta dinâmica)
+            URL_LOGIN = config['navegador']['url']['login']
+            URL_DASHBOARD = config['navegador']['url']['dashboard']
+            URL_API = config['navegador']['url']['api']
         except Exception as e:
             print(f'[AVISO] Falha ao iniciar servidor mock web: {e}')
             print('[AVISO] Usando modo mock headless (sem navegador)')
