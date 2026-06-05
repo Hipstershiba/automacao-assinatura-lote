@@ -51,6 +51,19 @@ def _gerar_contratos(quantidade=15):
     return contratos
 
 
+def _contratos_por_cenario(cenario, delay=0):
+    """Retorna contratos e tempo de delay conforme o cenário de teste."""
+    if cenario == 'empty':
+        return [], delay
+    elif cenario == 'minimal':
+        return _gerar_contratos(1), delay
+    elif cenario == 'expired_certs':
+        contratos = _gerar_contratos(5)
+        return contratos, delay
+    else:  # normal
+        return _gerar_contratos(15), delay
+
+
 # ── Páginas HTML ──────────────────────────────────────────────────────────
 
 PAGINA_LOGIN = '''<!DOCTYPE html>
@@ -264,8 +277,16 @@ class MockHandler(BaseHTTPRequestHandler):
 
     contratos = _gerar_contratos(15)
     lotes_criados = 0
+    delay = 0
+    cenario = 'normal'
+
+    def _aplicar_delay(self):
+        import time
+        if self.__class__.delay > 0:
+            time.sleep(self.__class__.delay)
 
     def _json(self, data, status=200):
+        self._aplicar_delay()
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -352,17 +373,28 @@ class MockHandler(BaseHTTPRequestHandler):
 # ── Server Manager ────────────────────────────────────────────────────────
 
 class ServidorMock:
-    """Inicia/gerencia o servidor HTTP mock em uma thread separada."""
+    """Inicia/gerencia o servidor HTTP mock em uma thread separada.
 
-    def __init__(self, host='127.0.0.1', port=0):
+    Parâmetros:
+        scenario: 'normal' | 'empty' | 'minimal' | 'expired_certs'
+        delay: atraso simulado em segundos por requisição HTTP
+    """
+
+    def __init__(self, host='127.0.0.1', port=0, scenario='normal', delay=0):
         self.host = host
         self.port = port
+        self.scenario = scenario
+        self.delay = delay
         self._server = None
         self._thread = None
         self._started = threading.Event()
 
     def iniciar(self):
         """Inicia o servidor em uma thread daemon."""
+        contratos, _ = _contratos_por_cenario(self.scenario, self.delay)
+        MockHandler.contratos = contratos
+        MockHandler.delay = self.delay
+        MockHandler.cenario = self.scenario
         self._server = ThreadedHTTPServer((self.host, self.port), MockHandler)
         self.port = self._server.server_address[1]
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)

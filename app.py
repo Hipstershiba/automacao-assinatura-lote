@@ -91,6 +91,8 @@ controle_bot:
 test_mode: false
 
 mock_web: false
+mock_scenario: normal
+mock_delay: 0
 """, encoding='utf-8')
 
     with open(path, 'r', encoding='utf-8') as f:

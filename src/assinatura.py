@@ -427,7 +427,10 @@ def rodar_automacao(config=None, stop_event=None):
     if modo_teste and mock_web:
         try:
             from src.servidor_mock import ServidorMock
-            servidor_mock = ServidorMock()
+            servidor_mock = ServidorMock(
+                scenario=config.get('mock_scenario', 'normal'),
+                delay=config.get('mock_delay', 0),
+            )
             servidor_mock.iniciar()
             servidor_mock.aguardar()
             # Redireciona URLs do navegador para o servidor mock

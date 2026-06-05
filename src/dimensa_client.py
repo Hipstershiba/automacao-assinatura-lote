@@ -84,27 +84,46 @@ class DimensaClient:
         self.navegador.refresh()
         time.sleep(self.pausa_login)
 
-    def capturar_token(self):
+    def capturar_token(self, tentativas=3, intervalo=3):
         self.validar_navegador()
         logger.info('Iniciando varredura dos logs de rede para captura do token...')
 
-        logs = self.navegador.get_log('performance')
-        for log in logs:
-            try:
-                log_data = json.loads(log['message'])['message']
-                
-                if log_data['method'] == 'Network.requestWillBeSent':
-                    request_data = log_data.get('params', {}).get('request', {})
-                    headers = request_data.get('headers', {})
-                    
-                    auth = {key.lower(): value for key, value in headers.items()}.get('authorization')
-                    
-                    if auth and 'Bearer' in auth:
-                        self.token = auth
-                        logger.info('Bearer Token encontrado na requisição de rede!')
-                        break
-            except (json.JSONDecodeError, KeyError, TypeError):
-                continue
+        for tentativa in range(1, tentativas + 1):
+            if self.stop_event.is_set():
+                raise RuntimeError("Parada solicitada pelo usuário")
+
+            logs = self.navegador.get_log('performance')
+            for log in logs:
+                try:
+                    log_data = json.loads(log['message'])['message']
+
+                    if log_data['method'] == 'Network.requestWillBeSent':
+                        request_data = log_data.get('params', {}).get('request', {})
+                        headers = request_data.get('headers', {})
+
+                        auth = {key.lower(): value for key, value in headers.items()}.get('authorization')
+
+                        if auth and 'Bearer' in auth:
+                            self.token = auth
+                            logger.info('Bearer Token encontrado na requisição de rede!')
+                            break
+                except (json.JSONDecodeError, KeyError, TypeError):
+                    continue
+
+            if self.token:
+                break
+
+            if tentativa < tentativas:
+                logger.info(f'Token não encontrado (tentativa {tentativa}) — recarregando dashboard...')
+                print(f'[INFO] Token não encontrado, recarregando dashboard...')
+                self.navegador.refresh()
+                time.sleep(intervalo)
+
+        if self.token is None:
+            raise RuntimeError(
+                f"Não foi possível capturar o token após {tentativas} tentativas. "
+                "O login pode ter falhado ou o portal não está enviando o Bearer token."
+            )
 
         if self.validar_token():
             return self.token
