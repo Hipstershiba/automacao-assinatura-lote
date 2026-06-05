@@ -1,0 +1,52 @@
+name: Build & Attach Windows Executable
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable (--onedir)
+        run: python build.py
+
+      - name: Package artifacts
+        run: |
+          Compress-Archive -Path dist/assinatura-lote/* -DestinationPath "assinatura-lote-${{ github.event.release.tag_name }}-windows.zip"
+
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.event.release.tag_name }}"
+          if (-not $tag) { $tag = $env:GITHUB_REF_NAME }
+          $zip = "assinatura-lote-${tag}-windows.zip"
+          # Cria release se não existir (tag push), upload se já existir
+          gh release create $tag --title $tag --notes "Build automático" 2>$null
+          gh release upload $tag $zip --clobber

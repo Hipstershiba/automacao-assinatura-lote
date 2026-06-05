@@ -77,7 +77,7 @@ def build():
         cmd.append(f'--hidden-import={imp}')
 
     for src, dst in DATAS:
-        cmd.append(f'--add-data={src}:{dst}')
+        cmd.append(f'--add-data={src}{os.pathsep}{dst}')
 
     cmd.append(str(BASE_DIR / 'app.py'))
 
