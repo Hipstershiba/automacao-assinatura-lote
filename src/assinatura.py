@@ -75,7 +75,8 @@ def baixar_contratos(sessao, parametros, url_api):
 
     inicio_total = time.time()
 
-    print(f"\n--- Iniciando Download de {total_contratos} documentos ---")
+    print(f"Iniciando download de {total_contratos} documentos")
+    logging.info(f"Iniciando download de {total_contratos} documentos")
 
     for pagina in range(1, total_paginas + 1):
         parametros['page'] = pagina
@@ -108,14 +109,15 @@ def baixar_contratos(sessao, parametros, url_api):
                    f"({percentual:.1f}%) | ETA: {eta_str}")
 
             logging.info(msg)
-            sys.stdout.write(f"\r[PROCESSO] {msg}")
-            sys.stdout.flush()
+            print(f"[PROGRESSO] {msg}")
 
         except Exception as e:
             logging.error(f"\nErro na página {pagina}: {e}")
 
     tempo_final = time.time() - inicio_total
-    print(f"\n\nConcluído em {int(tempo_final // 60)}min {int(tempo_final % 60)}s!")
+    msg = f"Download concluído em {int(tempo_final // 60)}min {int(tempo_final % 60)}s!"
+    print(msg)
+    logging.info(msg)
     return todos_documentos
 
 
@@ -197,16 +199,10 @@ def encerrar_automacao(navegador, gerador_relatorio=None, codigo=1, perguntar=Fa
             print("Opção inválida! Aperte ENTER ou digite 'Y' ou 'N'.")
 
 
-def verificar_solicitacao_parada(navegador, gerador_relatorio=None):
+def verificar_solicitacao_parada(navegador, gerador_relatorio=None, stop_event=None):
     """Verifica se a interface gráfica solicitou a interrupção da automação."""
-    if os.path.exists("sinal_parar.tmp"):
+    if stop_event and stop_event.is_set():
         print("\n[INFO] Sinal de interrupção detectado vindo da interface!")
-
-        try:
-            os.remove("sinal_parar.tmp")
-        except Exception as e:
-            print(f"[WARNING] Erro ao deletar arquivo de sinal: {e}")
-
         encerrar_automacao(navegador, gerador_relatorio, codigo=0, perguntar=False)
 
 
@@ -235,7 +231,9 @@ def selecionar_certificado(navegador, wait, certificado_cnpj, certificado_nome):
         for certificado in certificados:
             texto = certificado.text
 
-            if f"CNPJ: {certificado_cnpj}" not in texto:
+            # Extrai só os dígitos do texto e compara com o CPF/CNPJ sem formatação
+            digitos_texto = ''.join(c for c in texto if c.isdigit())
+            if certificado_cnpj not in digitos_texto:
                 continue
             if certificado_nome not in texto:
                 continue
@@ -258,16 +256,22 @@ def selecionar_certificado(navegador, wait, certificado_cnpj, certificado_nome):
 def assinar_lote(navegador, gerador_relatorio, wait,
                  pausa_minima, pausa_maxima,
                  certificado_cpf, certificado_nome,
-                 modo_teste=False):
+                 modo_teste=False,
+                 url_batch=None):
 
     if modo_teste:
-        print(f'[MOCK] 📝 Simulando assinatura em lote...')
-        print(f'[MOCK] ✅ Lote assinado com sucesso (simulado)!')
+        msg = '[MOCK] 📝 Simulando assinatura em lote...'
+        print(msg)
+        logging.info(msg)
+        msg = '[MOCK] ✅ Lote assinado com sucesso (simulado)!'
+        print(msg)
+        logging.info(msg)
         return
 
     # Abre página de assinar em lote
+    url_batch = url_batch or 'https://sign.app.dimensa.com.br/adminsign/user/batch-subscription'
     try:
-        navegador.get('https://sign.app.dimensa.com.br/adminsign/user/batch-subscription')
+        navegador.get(url_batch)
     except Exception as e:
         logging.error('Falha ao tentar acessar página Assinar em Lote')
         logging.error(e)
@@ -319,7 +323,18 @@ def assinar_lote(navegador, gerador_relatorio, wait,
         encerrar_automacao(navegador, gerador_relatorio, 1)
     delay(pausa_minima, pausa_maxima)
 
-    # Confirma assinatura
+    # Confirma assinatura — primeiro clica em "Confirmar Assinatura"
+    # (tela intermediária que exibe o modal de confirmação)
+    try:
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnConfirmar"]')))
+        navegador.find_element(By.XPATH, '//*[@id="btnConfirmar"]').click()
+        logging.info('Confirmação de certificado acionada')
+    except Exception as e:
+        logging.error('Falha ao acionar confirmação de certificado')
+        logging.error(e)
+        encerrar_automacao(navegador, gerador_relatorio, 1)
+    delay(pausa_minima, pausa_maxima)
+
     try:
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="tutorial-cert-assina"]')))
         navegador.find_element(By.XPATH, '//*[@id="tutorial-cert-assina"]').click()
@@ -345,13 +360,14 @@ def assinar_lote(navegador, gerador_relatorio, wait,
 # Função principal (ponto de entrada único)
 #========================================
 
-def rodar_automacao(config=None):
+def rodar_automacao(config=None, stop_event=None):
     """
     Executa a automação de assinatura em lote.
 
     Parâmetros:
         config: dicionário com toda a configuração (mesma estrutura do config.yaml).
                 Se None, lê do arquivo 'config.yaml' no diretório atual.
+        stop_event: threading.Event para interromper a execução.
 
     Retorna: 0 em caso de sucesso, 1 em caso de erro.
 
@@ -391,15 +407,45 @@ def rodar_automacao(config=None):
     logging.info('========================================')
     logging.info('INICIANDO AUTOMAÇÃO')
     logging.info('========================================')
-    print('[INFO] INICIANDO AUTOMAÇÃO')
 
     # Verifica modo de teste
     modo_teste = config.get('test_mode', False)
+    mock_web = config.get('mock_web', False)
+
     if modo_teste:
         if not _MOCK_DISPONIVEL:
             print('[AVISO] Módulo de mock não encontrado. Instalando dependências de teste...')
-        print('[MOCK] 🧪 MODO DE TESTE ATIVO — simulando portal DimensaSign')
-        print('[MOCK] Nenhum dado real será acessado ou modificado.')
+        msg = '[MOCK] 🧪 MODO DE TESTE ATIVO — simulando portal DimensaSign'
+        print(msg)
+        logging.info(msg)
+        msg = '[MOCK] Nenhum dado real será acessado ou modificado.'
+        print(msg)
+        logging.info(msg)
+
+    # Mock visual com servidor web + navegador real
+    servidor_mock = None
+    if modo_teste and mock_web:
+        try:
+            from src.servidor_mock import ServidorMock
+            servidor_mock = ServidorMock()
+            servidor_mock.iniciar()
+            servidor_mock.aguardar()
+            # Redireciona URLs do navegador para o servidor mock
+            config['navegador']['url']['login'] = servidor_mock.url_login
+            config['navegador']['url']['dashboard'] = servidor_mock.url_dashboard
+            config['navegador']['url']['api'] = servidor_mock.url_api
+            print(f'[MOCK] 🌐 Servidor web mock em {servidor_mock.url_base}')
+            logging.info(f'[MOCK] 🌐 Servidor web mock em {servidor_mock.url_base}')
+            print(f'[MOCK] 🔗 Navegador real apontando para páginas locais')
+            logging.info(f'[MOCK] 🔗 Navegador real apontando para páginas locais')
+            # Re-extrai URLs após mock server estar pronto (porta dinâmica)
+            URL_LOGIN = config['navegador']['url']['login']
+            URL_DASHBOARD = config['navegador']['url']['dashboard']
+            URL_API = config['navegador']['url']['api']
+        except Exception as e:
+            print(f'[AVISO] Falha ao iniciar servidor mock web: {e}')
+            print('[AVISO] Usando modo mock headless (sem navegador)')
+            mock_web = False
 
     # Inicializa gerador de relatório
     gerador_relatorio = GeradorRelatorio(
@@ -414,11 +460,11 @@ def rodar_automacao(config=None):
         ordem_assinatura=ORDEM_ASSINATURA
     )
 
-    # Abre navegador (real ou mock)
-    if modo_teste:
-        dimensa = MockDimensaClient(config['navegador'])
+    # Abre navegador (real ou mock headless)
+    if modo_teste and not mock_web:
+        dimensa = MockDimensaClient(config['navegador'], stop_event=stop_event)
     else:
-        dimensa = DimensaClient(config['navegador'])
+        dimensa = DimensaClient(config['navegador'], stop_event=stop_event)
     dimensa.iniciar_navegador()
     navegador = dimensa.navegador
 
@@ -448,7 +494,7 @@ def rodar_automacao(config=None):
     sessao = dimensa.sessao
     sessao.headers.update({'Authorization': token})
 
-    if modo_teste:
+    if modo_teste and not mock_web:
         wait = MockWebDriverWait(navegador, ESPERA_ELEMENTO)
     else:
         wait = WebDriverWait(navegador, ESPERA_ELEMENTO)
@@ -515,7 +561,7 @@ def rodar_automacao(config=None):
     print(f'[INFO] Contratos restantes: {contratos_restantes}/{contratos_total}')
 
     for i in range(0, contratos_total, TAMANHO_LOTE):
-        verificar_solicitacao_parada(navegador, gerador_relatorio)
+        verificar_solicitacao_parada(navegador, gerador_relatorio, stop_event=stop_event)
         lote_contratos = contratos_validados[i: i + TAMANHO_LOTE]
         ids_lote = [contrato.id for contrato in lote_contratos]
         try:
@@ -529,7 +575,8 @@ def rodar_automacao(config=None):
             assinar_lote(navegador, gerador_relatorio, wait,
                          PAUSA_MINIMA, PAUSA_MAXIMA,
                          CERTIFICADO_CPF, CERTIFICADO_NOME,
-                         modo_teste=modo_teste)
+                         modo_teste=(modo_teste and not mock_web),
+                         url_batch=(URL_API + '/batch-subscription') if mock_web else None)
             logging.info('Lote assinado com sucesso')
 
             for contrato in lote_contratos:

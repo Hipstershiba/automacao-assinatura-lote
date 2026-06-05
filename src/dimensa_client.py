@@ -5,6 +5,7 @@ import os
 import time
 import json
 import logging
+import threading
 import requests
 
 from selenium import webdriver
@@ -21,9 +22,10 @@ logger = logging.getLogger(__name__)
 # Classe
 #========================================
 class DimensaClient:
-    def __init__(self, config_navegador=None):
+    def __init__(self, config_navegador=None, stop_event=None):
         
         self._validar_config(config_navegador)
+        self.stop_event = stop_event or threading.Event()
         self.url_login = config_navegador['url']['login']
         self.url_dashboard = config_navegador['url']['dashboard']
         self.url_api = config_navegador['url']['api']
@@ -71,6 +73,10 @@ class DimensaClient:
 
         url = self.navegador.current_url
         while url != self.url_dashboard:
+            if self.stop_event.is_set():
+                logger.info("Parada solicitada durante login")
+                print("[INFO] Parada solicitada — interrompendo login")
+                raise RuntimeError("Parada solicitada pelo usuário")
             print('[INFO] Aguardando login...')
             time.sleep(self.pausa_login)
             url = self.navegador.current_url
@@ -117,8 +123,14 @@ class DimensaClient:
         url = f'{self.url_api}/api/v2/documentos/list/meus-documentos'
 
         for tentativa in range(1, tentativas + 1):
+            # Verifica se o usuário solicitou parada
+            if self.stop_event.is_set():
+                logger.info("Parada solicitada durante validação do token")
+                print("[INFO] Parada solicitada — interrompendo validação do token")
+                raise RuntimeError("Parada solicitada pelo usuário")
+
             try:
-                response = self.sessao.get(url, params={'limit': 1})
+                response = self.sessao.get(url, params={'limit': 1}, timeout=intervalo)
                 if response.ok:
                     logger.info(f'Token validado com sucesso na tentativa {tentativa}')
                     print(f'[INFO] Token validado com sucesso na tentativa {tentativa}')
