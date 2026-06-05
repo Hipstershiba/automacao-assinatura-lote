@@ -1,5 +1,30 @@
-selenium>=4.0
-requests>=2.31
-PyYAML>=6.0
-openpyxl>=3.1
-pyinstaller>=6.20
+# ============================================
+# Dependências — Automação Assinatura em Lote
+# ============================================
+#
+# Instalação (sempre usar virtual environment):
+#
+#   Windows (PowerShell):
+#     python -m venv .venv
+#     .venv\Scripts\activate
+#     pip install -r requirements.txt
+#
+#   Linux / macOS:
+#     python3 -m venv .venv
+#     source .venv/bin/activate
+#     pip install -r requirements.txt
+#
+# ============================================
+
+# --- Automação Web ---
+selenium>=4.0.0            # Selenium WebDriver (Edge)
+requests>=2.31.0           # Chamadas HTTP para API do DimensaSign
+
+# --- Configuração YAML ---
+PyYAML>=6.0                # Leitura do config.yaml
+
+# --- Relatórios Excel ---
+openpyxl>=3.1.0            # Geração de relatórios .xlsx
+
+# --- Build de executável ---
+pyinstaller>=6.20.0        # Geração do .exe (python build.py)
