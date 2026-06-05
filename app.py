@@ -162,7 +162,7 @@ class LauncherApp(tk.Tk):
 
         # Filtros (Grid de 2 Colunas)
         filtros = ttk.LabelFrame(self, text='Filtros')
-        filtros.pack(fill='x', **pad, ipady=5)
+        filtros.pack(fill='x', **pad, ipady=5) # type: ignore
 
         filtros.columnconfigure(0, weight=1)
         filtros.columnconfigure(1, weight=1)
@@ -207,7 +207,7 @@ class LauncherApp(tk.Tk):
 
         # Botões
         botoes = ttk.Frame(self)
-        botoes.pack(fill='x', **pad)
+        botoes.pack(fill='x', **pad) # type: ignore
 
         self.btn_executar = ttk.Button(botoes, text='▶ Executar Automação', command=self._executar)
         self.btn_executar.pack(side='left', padx=(0, 6))
@@ -220,7 +220,7 @@ class LauncherApp(tk.Tk):
 
         # Log
         log_frame = ttk.LabelFrame(self, text='Log da Automação', padding=4)
-        log_frame.pack(fill='both', expand=True, **pad)
+        log_frame.pack(fill='both', expand=True, **pad) # type: ignore
 
         self.log_text = tk.Text(log_frame, height=14, wrap='word', state='disabled',
                                 font=('Consolas', 9), bg='#1e1e1e', fg='#d4d4d4',
