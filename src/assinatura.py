@@ -75,7 +75,8 @@ def baixar_contratos(sessao, parametros, url_api):
 
     inicio_total = time.time()
 
-    print(f"\n--- Iniciando Download de {total_contratos} documentos ---")
+    print(f"Iniciando download de {total_contratos} documentos")
+    logging.info(f"Iniciando download de {total_contratos} documentos")
 
     for pagina in range(1, total_paginas + 1):
         parametros['page'] = pagina
@@ -114,7 +115,9 @@ def baixar_contratos(sessao, parametros, url_api):
             logging.error(f"\nErro na página {pagina}: {e}")
 
     tempo_final = time.time() - inicio_total
-    print(f"\n\nConcluído em {int(tempo_final // 60)}min {int(tempo_final % 60)}s!")
+    msg = f"Download concluído em {int(tempo_final // 60)}min {int(tempo_final % 60)}s!"
+    print(msg)
+    logging.info(msg)
     return todos_documentos
 
 
