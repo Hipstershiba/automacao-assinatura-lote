@@ -162,13 +162,15 @@ text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.15)}
 <nav><h1>📝 Assinar em Lote — Mock</h1></nav>
 <main>
   <div class="card">
-    <h3 style="margin-top:0">Lote Criado com Sucesso!</h3>
-    <p style="color:#666">5 contratos prontos para assinatura.</p>
-    <button class="btn" id="btnAssinarLote"
-      onclick="document.getElementById('step1').style.display='none';
-               document.getElementById('step2').style.display='block'">
-      Assinar em Lote
-    </button>
+    <div id="step1">
+      <h3 style="margin-top:0">Lote Criado com Sucesso!</h3>
+      <p style="color:#666">5 contratos prontos para assinatura.</p>
+      <button class="btn" id="btnAssinarLote"
+        onclick="document.getElementById('step1').style.display='none';
+                 document.getElementById('step2').style.display='block'">
+        Assinar em Lote
+      </button>
+    </div>
     <div id="step2" style="display:none;margin-top:24px">
       <button class="btn btn-success" id="btnVisualizarLote"
         onclick="document.getElementById('step2').style.display='none';
