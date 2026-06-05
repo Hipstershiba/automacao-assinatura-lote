@@ -1,0 +1,15 @@
+*.log
+*.spec
+*.yaml
+*.env
+*.txt
+*.pdf
+*.xlsx
+!info.txt
+__pycache__
+/build
+/dist
+/logs
+/relatorios
+/user_profile
+/venv

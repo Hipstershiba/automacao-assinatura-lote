@@ -1,0 +1,41 @@
+usuario:
+  nome: 'Fulano'
+  cpf: '12345678900'
+
+certificado:
+  nome: 'Fulano'
+  cpf: '12345678900'
+
+navegador:
+  url:
+    login: 'https://sign.app.dimensa.com.br/adminsign/login'
+    dashboard: 'https://sign.app.dimensa.com.br/adminsign/dashboard'
+    api: 'https://api.assina.rbm.digital'
+  profile:
+    path: './user_profile'
+    name: 'Selenium'
+  pausas:
+    login: 5
+
+api_servidor:
+    documentos_por_requisicao: 3000
+
+assinatura:
+  filtros:
+    data_inicial: '01/05/2026'
+    data_final: '30/05/2026'
+    tag: 
+    titulo:
+  fluxo:
+    ordem_signatarios:
+  lote:
+    tamanho: 10
+
+controle_bot:
+  pausas:
+    espera_elemento: 60
+    minima: 2
+    maxima: 4
+
+# Modo de teste (true = simula o portal sem precisar do DimensaSign real)
+test_mode: false
